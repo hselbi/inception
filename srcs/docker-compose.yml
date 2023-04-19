@@ -1,0 +1,78 @@
+version: '3.0'
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: requirements/nginx/Dockerfile
+    image: nginx:1.20
+    container_name: nginx
+    depends_on:
+      - wordpress
+    volumes:
+      - ./requirements/nginx/conf/:/etc/nginx/conf.d/
+      - ./requirements/nginx/tools/hselbi.42.fr.crt:/etc/nginx/ssl/hselbi.42.fr.crt
+      - ./requirements/nginx/tools/hselbi.42.fr.key:/etc/nginx/ssl/hselbi.42.fr.key
+      - wp-volume:/var/www/
+    ports:
+      - "443:443"
+    env_file:
+      - .env
+    networks:
+      - inception
+    restart: always
+
+  mariadb:
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+      args:
+        DB_NAME: ${DB_NAME}
+        DB_USER: ${DB_USER}
+        DB_PASS: ${DB_PASS}
+        DB_ROOT: ${DB_ROOT}
+    image: mariadb:10.11
+    container_name: mariadb
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    networks: 
+      - inception
+    restart: always
+
+  wordpress:
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+      args:
+        DB_NAME: ${DB_NAME}
+        DB_USER: ${DB_USER}
+        DB_PASS: ${DB_PASS}
+    image: wordpress
+    container_name: wordpress
+    depends_on: 
+      - mariadb
+    volumes:
+      - wp-volume:/var/www/
+    env_file:
+      - .env
+    networks:
+      - inception
+    restart: always
+
+volumes:
+  wp-volume:
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/${USER}/data/wordpress
+  db-volume:
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/${USER}/data/mariadb
+
+networks:
+  inception:
+    driver: bridge
