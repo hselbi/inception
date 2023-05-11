@@ -9,8 +9,6 @@ ADD https://wordpress.org/wordpress-5.7.2.tar.gz /var/www/
 RUN cd /var/www && tar -xzvf wordpress-5.7.2.tar.gz
 RUN rm -f /var/www/wordpress-5.7.2.tar.gz
 
-COPY ./conf/wp-config.php .
-
 COPY ./tools/ .
 
 RUN bash ./install.sh

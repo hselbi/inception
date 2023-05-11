@@ -1,12 +1,12 @@
-version: '3.0'
+version: '3.8'
 
 services:
   nginx:
     build:
       context: .
       dockerfile: requirements/nginx/Dockerfile
-    image: nginx:1.20
     container_name: nginx
+    image: nginx
     depends_on:
       - wordpress
     volumes:
@@ -26,17 +26,17 @@ services:
     build:
       context: ./requirements/mariadb
       dockerfile: Dockerfile
-    image: mariadb:10.11
     container_name: mariadb
+    image: mariadb
     volumes:
       - db-volume:/var/lib/mysql
     env_file:
       - .env
     environment:
-      - DB_NAME: ${DB_NAME}
-      - DB_USER: ${DB_USER}
-      - DB_PASSWORD: ${DB_PASSWORD}
-      - DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
       - "3306:3306"
     networks: 
@@ -47,8 +47,8 @@ services:
     build:
       context: ./requirements/wordpress
       dockerfile: Dockerfile
-    image: wordpress
     container_name: wordpress
+    image: wordpress
     depends_on: 
       - mariadb
     volumes:
@@ -56,35 +56,29 @@ services:
     env_file:
       - .env
     environment:
-      - DB_NAME: ${DB_NAME}
-      - DB_USER: ${DB_USER}
-      - DB_PASSWORD: ${DB_PASSWORD}
-      - DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_HOST: ${DB_HOST}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      USER_ADMIN_EMAIL: ${USER_ADMIN_EMAIL}
+      USER_EMAIL: ${USER_EMAIL}
+      USER_NAME: ${USER_NAME}
+      TITLE: ${TITLE}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     networks:
       - inception
     restart: always
-  
-  ftp-server:
-    build: requirements/bonus/ftp-server
-    container_name: ftp-server
-    ports:
-      - "21:21"
-    volumes:
-      - wp-volume:/var/www/wordpress
-    networks:
-     - project
-    restart: always
-    environment:
-      FTP_USR: ${FTP_USR}
-      FTP_PWD: ${FTP_PWD}
 
 volumes:
   wp-volume:
+    name: wp-volume
     driver_opts:
       o: bind
       type: none
       device: /home/${USER}/data/wordpress
   db-volume:
+    name: db-volume
     driver_opts:
       o: bind
       type: none
